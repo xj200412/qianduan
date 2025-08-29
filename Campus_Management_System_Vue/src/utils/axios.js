@@ -33,13 +33,13 @@ service.interceptors.response.use(
   response => {
   const res = response.data;
   console.log('后端响应:', res); // 打印完整响应
-  // 临时注释状态码校验
-  // if (res.code !== 200) {
-  //   ElMessage.error(res.message || '操作失败');
-  //   return Promise.reject(new Error(res.message || 'Error'));
-  // } else {
+  临时注释状态码校验
+  if (res.code !== 200) {
+    ElMessage.error(res.message || '操作失败');
+    return Promise.reject(new Error(res.message || 'Error'));
+  } else {
     return res;
-  // }
+  }
 },
   error => {
     // 处理响应错误
