@@ -305,13 +305,13 @@
               </button>
               
               <!-- 动态生成页码按钮 -->
-              <template v-for="pageNum in visiblePages" :key="pageNum">
+              <template v-for="page in visiblePages" :key="page">
                 <button 
                   class="pagination-btn" 
-                  :class="{ 'active': pagination.page === pageNum }" 
-                  @click="changePage(pageNum)"
+                  :class="{ 'active': pagination.page === page }" 
+                  @click="changePage(page)"
                 >
-                  {{ pageNum }}
+                  {{ page }}
                 </button>
               </template>
               
@@ -538,7 +538,7 @@ const handleSearchInput = () => {
 // 获取楼栋数据
 const fetchBuildings = async () => {
   try {
-    const response = await axios.get('/buildings');
+    const response = await axios.get('/common/getBuildingsdings');
     if (response.data && response.data.data) {
       buildings.value = response.data.data;
     }
@@ -684,9 +684,9 @@ const resetFilter = () => {
 };
 
 // 改变页码
-const changePage = (pageNum) => {
-  if (pageNum === '...') return; // 跳过省略号
-  filter.value.page = pageNum;
+const changePage = (page) => {
+  if (page === '...') return; // 跳过省略号
+  filter.value.page = page;
   fetchLogs();
 };
 
