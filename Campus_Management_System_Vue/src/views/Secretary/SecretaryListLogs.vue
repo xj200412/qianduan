@@ -149,8 +149,8 @@
                     >
                       <option value="">全部状态</option>
                       <option value="待审核">待审核</option>
-                      <option value="已通过">已通过</option>
-                      <option value="已驳回">已驳回</option>
+                      <option value="已批准">已批准</option>
+                      <option value="已拒绝">已拒绝</option>
                     </select>
                   </div>
                   
@@ -258,8 +258,8 @@
                     <td>
                       <span class="status-tag" :class="{
                         'pending': item.applyStatus === '待审核',
-                        'approved': item.applyStatus === '已通过',
-                        'rejected': item.applyStatus === '已驳回'
+                        'approved': item.applyStatus === '已批准',
+                        'rejected': item.applyStatus === '已拒绝'
                       }">
                         {{ item.applyStatus }}
                       </span>
@@ -379,15 +379,15 @@
             <span class="detail-label">人数：</span>
             <span class="detail-value">{{ currentDetail.personCount || '-' }}</span>
           </div>
-          <div class="detail-item" v-if="currentDetail.applyStatus === '已通过'">
+          <div class="detail-item" v-if="currentDetail.applyStatus === '已批准'">
             <span class="detail-label">审核时间：</span>
             <span class="detail-value">{{ currentDetail.approve_time || '-' }}</span>
           </div>
-          <div class="detail-item" v-if="currentDetail.applyStatus === '已驳回'">
+          <div class="detail-item" v-if="currentDetail.applyStatus === '已拒绝'">
             <span class="detail-label">驳回时间：</span>
             <span class="detail-value">{{ currentDetail.reject_time || '-' }}</span>
           </div>
-          <div class="detail-item" v-if="currentDetail.applyStatus === '已驳回' && currentDetail.reject_reason">
+          <div class="detail-item" v-if="currentDetail.applyStatus === '已拒绝' && currentDetail.reject_reason">
             <span class="detail-label">驳回原因：</span>
             <span class="detail-value">{{ currentDetail.reject_reason }}</span>
           </div>
