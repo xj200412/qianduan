@@ -251,8 +251,8 @@
                     <td>{{ item.userName }}</td>
                     <td>{{ item.phone }}</td>
                     <td>{{ item.bookTime }}</td>
-                    <td>{{ item.classroom }}</td>
-                    <td>{{ item.use_time }}</td>
+                    <td>{{ item.roomNum }}</td>
+                    <td>{{ item.date }}</td>
                     <td>{{ item.purpose }}</td>
                     <td>{{ item.personCount }}</td>
                     <td>
@@ -365,11 +365,11 @@
           </div>
           <div class="detail-item">
             <span class="detail-label">教室：</span>
-            <span class="detail-value">{{ currentDetail.classroom || '-' }}</span>
+            <span class="detail-value">{{ currentDetail.roomNum || '-' }}</span>
           </div>
           <div class="detail-item">
             <span class="detail-label">使用时间：</span>
-            <span class="detail-value">{{ currentDetail.use_time || '-' }}</span>
+            <span class="detail-value">{{ currentDetail.date || '-' }}</span>
           </div>
           <div class="detail-item">
             <span class="detail-label">用途：</span>
