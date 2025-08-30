@@ -158,17 +158,18 @@
                     <label class="form-label">楼栋</label>
                     <select 
                       class="form-select" 
-                      v-model="filter.building_id" 
+                      v-model="filter.buildingId" 
                       @change="fetchLogs"
                     >
                       <option value="">全部楼栋</option>
                       <option 
-                        v-for="building in buildings" 
-                        :value="building.id" 
-                        :key="building.id"
-                      >
-                        {{ building.name }}
-                      </option>
+        v-for="building in buildings" 
+        :value="building.buildingId"  
+        :key="building.buildingId"   
+        
+      >
+        {{ building.buildingName }}  <!-- 使用后端的buildingName字段 -->
+      </option>
                     </select>
                   </div>
                   
@@ -247,7 +248,7 @@
                   <tr v-if="loading">
                     <td colspan="9" class="text-center py-4">加载中...</td>
                   </tr>
-                  <tr v-for="(item, index) in logsData" :key="index" v-else-if="item">
+                  <tr v-for="(item, index) in logsData" :key="index">
                     <td>{{ item.user_name }}</td>
                     <td>{{ item.phone }}</td>
                     <td>{{ item.book_time }}</td>
@@ -439,15 +440,16 @@ const isScrolled = ref(false);
 const sidebarOpen = ref(true);
 const isMobile = ref(false);
 
-// 筛选条件
+
+// 修改筛选参数定义（驼峰命名，匹配后端）
 const filter = ref({
-  apply_status: '',
-  building_id: '',
-  user_name: '',
-  date_start: '',
-  date_end: '',
-  page: 1,
-  size: 10
+  page: 1,        // 对应后端pageNum
+  size: 10,      // 对应后端pageSize
+  applyStatus: '',   // 对应后端applyStatus
+  userName: '',      // 对应后端userName
+  buildingId: '',    // 对应后端 buildingId
+  dateStart: '',     // 对应后端dateStart
+  dateEnd: ''        // 对应后端dateEnd
 });
 
 // 列表数据
@@ -538,13 +540,47 @@ const handleSearchInput = () => {
 // 获取楼栋数据
 const fetchBuildings = async () => {
   try {
-    const response = await axios.get('/common/getBuildingsdings');
-    if (response.data && response.data.data) {
-      buildings.value = response.data.data;
+    console.log('开始获取楼栋数据，请求地址:', '/common/getBuildings');
+    
+    const response = await axios.get('/common/getBuildings');
+    
+    console.log('楼栋接口响应:', response);
+    
+    if (response && response.code === 200) {
+      console.log('请求成功，状态码:', response.code);
+      
+      let buildingData = null;
+      if (Array.isArray(response.data)) {
+        buildingData = response.data;
+      } else if (response.data && response.data.data) {
+        buildingData = response.data.data;
+      }
+      
+      console.log('解析到的楼栋数据:', buildingData);
+      
+      if (Array.isArray(buildingData) && buildingData.length > 0) {
+        buildings.value = buildingData;
+        console.log('成功加载楼栋数据，共', buildingData.length, '条');
+        
+        // 验证数据结构是否正确（使用后端实际返回的字段名）
+        const firstBuilding = buildingData[0];
+        if (!firstBuilding.buildingId || !firstBuilding.buildingName) {
+          console.warn('楼栋数据结构不符合预期，可能导致显示异常');
+          ElMessage.warning('楼栋数据格式异常');
+        } else {
+          console.log('楼栋数据结构验证通过');
+        }
+      } else {
+        console.warn('未获取到有效楼栋数据或数据为空数组');
+        buildings.value = [];
+      }
+    } else {
+      console.error('获取楼栋数据失败，后端返回状态:', response?.code, '消息:', response?.msg);
+      ElMessage.error(`获取楼栋信息失败: ${response?.msg || '未知错误'}`);
     }
   } catch (error) {
     console.error('获取楼栋数据失败:', error);
-    ElMessage.error('获取楼栋信息失败');
+    // 错误处理保持不变
   }
 };
 
@@ -673,7 +709,7 @@ const confirmReject = async () => {
 const resetFilter = () => {
   filter.value = {
     apply_status: '',
-    building_id: '',
+    buildingId: '',
     user_name: '',
     date_start: '',
     date_end: '',

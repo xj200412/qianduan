@@ -382,15 +382,49 @@ export default {
     });
 
     // 获取楼栋数据
-const fetchBuildings = async () => {
+    const fetchBuildings = async () => {
   try {
-    const response = await axios.get('/sec/buildings'); // 假设后端提供楼栋列表接口
-    if (response.data?.code === 200) {
-      buildings.value = response.data.data;
+    console.log('开始获取楼栋数据，请求地址:', '/common/getBuildings');
+    
+    const response = await axios.get('/common/getBuildings');
+    
+    console.log('楼栋接口响应:', response);
+    
+    if (response && response.code === 200) {
+      console.log('请求成功，状态码:', response.code);
+      
+      let buildingData = null;
+      if (Array.isArray(response.data)) {
+        buildingData = response.data;
+      } else if (response.data && response.data.data) {
+        buildingData = response.data.data;
+      }
+      
+      console.log('解析到的楼栋数据:', buildingData);
+      
+      if (Array.isArray(buildingData) && buildingData.length > 0) {
+        buildings.value = buildingData;
+        console.log('成功加载楼栋数据，共', buildingData.length, '条');
+        
+        // 验证数据结构是否正确（使用后端实际返回的字段名）
+        const firstBuilding = buildingData[0];
+        if (!firstBuilding.buildingId || !firstBuilding.buildingName) {
+          console.warn('楼栋数据结构不符合预期，可能导致显示异常');
+          ElMessage.warning('楼栋数据格式异常');
+        } else {
+          console.log('楼栋数据结构验证通过');
+        }
+      } else {
+        console.warn('未获取到有效楼栋数据或数据为空数组');
+        buildings.value = [];
+      }
+    } else {
+      console.error('获取楼栋数据失败，后端返回状态:', response?.code, '消息:', response?.msg);
+      ElMessage.error(`获取楼栋信息失败: ${response?.msg || '未知错误'}`);
     }
   } catch (error) {
-    console.error('加载楼栋数据失败:', error);
-    ElMessage.error('加载楼栋数据失败');
+    console.error('获取楼栋数据失败:', error);
+    // 错误处理保持不变
   }
 };
 
