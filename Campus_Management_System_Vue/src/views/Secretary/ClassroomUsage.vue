@@ -119,15 +119,7 @@
             
             <div class="filter-content">
               <div class="filter-form">
-                <!-- 时间范围筛选 -->
-                <div class="form-group">
-                  <label class="form-label">统计周期</label>
-                  <select class="form-select" v-model="timeRange" @change="fetchUsageData">
-                    <option value="week">本周</option>
-                    <option value="month">本月</option>
-                    <option value="semester">本学期</option>
-                  </select>
-                </div>
+                
                 
                 <!-- 楼栋筛选 -->
                 <div class="form-group">
@@ -169,7 +161,7 @@
                 
                 <!-- 开始日期 -->
                 <div class="form-group">
-                  <label class="form-label">开始日期</label>
+                  <label class="form-label">使用教室开始日期</label>
                   <input 
                     type="date" 
                     class="form-input" 
@@ -180,7 +172,7 @@
                 
                 <!-- 结束日期 -->
                 <div class="form-group">
-                  <label class="form-label">结束日期</label>
+                  <label class="form-label">使用教室结束日期</label>
                   <input 
                     type="date" 
                     class="form-input" 
@@ -457,12 +449,12 @@ export default {
       roomTypes.value = response.data.data;
     } else {
       console.warn('获取教室类型失败，使用默认类型列表');
-      roomTypes.value = ['普通教室', '多媒体教室', '实验室', '阶梯教室', '会议室'];
+      roomTypes.value = ['没成功传数据先顶替'];
     }
   } catch (error) {
     console.error('加载教室类型失败:', error);
     ElMessage.warning('无法加载教室类型列表，使用默认类型');
-    roomTypes.value = ['普通教室', '多媒体教室', '实验室', '阶梯教室', '会议室'];
+    roomTypes.value = ['没成功传数据先顶替'];
   }
 };
 

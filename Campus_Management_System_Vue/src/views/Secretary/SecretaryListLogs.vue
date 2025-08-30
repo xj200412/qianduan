@@ -187,7 +187,7 @@
                 
                 <div class="filter-row">
                   <div class="form-group">
-                    <label class="form-label">开始日期</label>
+                    <label class="form-label">使用教室开始日期</label>
                     <input 
                       type="date" 
                       class="form-input" 
@@ -197,7 +197,7 @@
                   </div>
                   
                   <div class="form-group">
-                    <label class="form-label">结束日期</label>
+                    <label class="form-label">使用教室结束日期</label>
                     <input 
                       type="date" 
                       class="form-input" 
