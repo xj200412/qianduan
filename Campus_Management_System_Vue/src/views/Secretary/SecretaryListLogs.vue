@@ -593,37 +593,6 @@ const checkResponseStructure = (response) => {
   return true;
 };
 
-// 在checkResponseStructure函数后增加一个新的辅助函数
-const validateLogDataStructure = (data) => {
-  // 检查是否为对象
-  if (typeof data !== 'object' || data === null) {
-    console.error('日志数据不是有效的对象');
-    return false;
-  }
-  
-  // 检查必要字段
-  const requiredFields = ['list', 'total'];
-  const missingFields = requiredFields.filter(field => !(field in data));
-  
-  if (missingFields.length > 0) {
-    console.error(`日志数据缺少必要字段: ${missingFields.join(', ')}`);
-    return false;
-  }
-  
-  // 检查list是否为数组
-  if (!Array.isArray(data.list)) {
-    console.error('日志数据的list不是数组');
-    return false;
-  }
-  
-  // 检查total是否为数字
-  if (typeof data.total !== 'number') {
-    console.error('日志数据的total不是数字');
-    return false;
-  }
-  
-  return true;
-};
 // 处理搜索输入防抖
 const handleSearchInput = () => {
   if (searchTimer.value) {
@@ -711,7 +680,7 @@ const fetchBuildings = async () => {
 // 获取日志列表数据
 const fetchLogs = async () => {
   console.groupCollapsed('🔍 开始执行查询操作');
-  console.log('查询触发时间时间:', new Date().toISOString());
+  console.log('查询触发时间:', new Date().toISOString());
   
   loading.value = true;
   try {
@@ -749,7 +718,9 @@ const fetchLogs = async () => {
     
     const requestDuration = Date.now() - requestStartTime;
     console.log(`✅ 请求成功，耗时: ${requestDuration}ms`);
-    console.log('后端返回的完整响应:', response);
+    console.log('后端返回的完整响应数据:', response);
+    console.log('后端响应数据类型:', typeof response);
+    console.log('后端响应数据结构:', Object.keys(response));
     
     // 检查响应结构
     if (!checkResponseStructure(response)) {
@@ -790,6 +761,9 @@ const fetchLogs = async () => {
     
     if (response.data && response.data.data) {
       const data = response.data.data;
+      console.log('从响应中提取的业务数据:', data);
+      console.log('业务数据类型:', typeof data);
+      console.log('业务数据包含的字段:', data ? Object.keys(data) : '无数据');
       
       // 先检查是否为数组（后端直接返回数组的情况）
       if (Array.isArray(data)) {
@@ -810,6 +784,11 @@ const fetchLogs = async () => {
         todayPendingChange.value = 0;
         weekApprovedChange.value = 0;
         weekRejectedChange.value = 0;
+        
+        console.log('数组结构处理结果:', {
+          数据量: logsData.value.length,
+          总条数: pagination.value.total
+        });
       }
       // 再检查是否为预期的对象结构
       else if (typeof data === 'object' && data !== null) {
@@ -876,6 +855,22 @@ const fetchLogs = async () => {
         } else {
           weekRejectedChange.value = data.week_rejected_change;
         }
+        
+        console.log('对象结构处理结果:', {
+          数据量: logsData.value.length,
+          总条数: pagination.value.total,
+          统计数据: {
+            todayPending: todayPending.value,
+            weekApproved: weekApproved.value,
+            weekRejected: weekRejected.value
+          }
+        });
+        
+        // 打印第一条数据结构，方便检查字段匹配
+        if (logsData.value.length > 0) {
+          console.log('第一条申请数据的结构:', logsData.value[0]);
+          console.log('申请数据包含的字段:', Object.keys(logsData.value[0]));
+        }
       }
       // 既不是数组也不是对象的情况
       else {
@@ -887,7 +882,7 @@ const fetchLogs = async () => {
       
       console.log(`📊 后端返回数据数量: ${logsData.value.length}`);
       if (logsData.value.length > 0) {
-        console.log('第一条数据结构:', logsData.value[0]);
+        console.log('第一条数据详情:', logsData.value[0]);
       } else {
         console.log('💡 后端返回空数组，可能没有匹配的数据');
         ElMessage.info('没有找到匹配的申请数据');
@@ -950,8 +945,11 @@ const viewDetails = async (applyId) => {
     });
     
     console.log('获取详情响应:', response);
+    console.log('详情响应结构:', response ? Object.keys(response) : '无数据');
     
     if (response.data && response.data.data) {
+      console.log('详情数据:', response.data.data);
+      console.log('详情数据字段:', Object.keys(response.data.data));
       currentDetail.value = response.data.data;
       showDetails.value = true;
       console.log('详情数据加载成功');
