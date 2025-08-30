@@ -144,7 +144,7 @@
                     <label class="form-label">申请状态</label>
                     <select 
                       class="form-select" 
-                      v-model="filter.apply_status" 
+                      v-model="filter.applyStatus" 
                       @change="fetchLogs"
                     >
                       <option value="">全部状态</option>
@@ -177,7 +177,7 @@
                     <input 
                       type="text" 
                       class="form-input" 
-                      v-model="filter.user_name" 
+                      v-model="filter.userName" 
                       placeholder="输入申请人姓名"
                       @input="handleSearchInput"
                     >
@@ -248,20 +248,20 @@
                     <td colspan="9" class="text-center py-4">加载中...</td>
                   </tr>
                   <tr v-for="(item, index) in logsData" :key="index">
-                    <td>{{ item.user_name }}</td>
+                    <td>{{ item.userName }}</td>
                     <td>{{ item.phone }}</td>
-                    <td>{{ item.book_time }}</td>
+                    <td>{{ item.bookTime }}</td>
                     <td>{{ item.classroom }}</td>
                     <td>{{ item.use_time }}</td>
                     <td>{{ item.purpose }}</td>
-                    <td>{{ item.person_count }}</td>
+                    <td>{{ item.personCount }}</td>
                     <td>
                       <span class="status-tag" :class="{
-                        'pending': item.apply_status === '待审核',
-                        'approved': item.apply_status === '已通过',
-                        'rejected': item.apply_status === '已驳回'
+                        'pending': item.applyStatus === '待审核',
+                        'approved': item.applyStatus === '已通过',
+                        'rejected': item.applyStatus === '已驳回'
                       }">
-                        {{ item.apply_status }}
+                        {{ item.applyStatus }}
                       </span>
                     </td>
                     <td>
@@ -274,22 +274,22 @@
                       <button 
                         class="btn approve-btn" 
                         @click="handleApprove(item.apply_id)"
-                        v-if="item.apply_status === '待审核'"
+                        v-if="item.applyStatus === '待审核'"
                       >
                         通过
                       </button>
                       <button 
                         class="btn reject-btn" 
                         @click="handleReject(item.apply_id)"
-                        v-if="item.apply_status === '待审核'"
+                        v-if="item.applyStatus === '待审核'"
                       >
                         驳回
                       </button>
                     </td>
                   </tr>
                   <tr v-if="!loading && logsData.length === 0">
-                    <td colspan="9" class="text-center py-4">暂无数据</td>
-                  </tr>
+    <td colspan="9" class="text-center py-4">暂无数据</td>
+  </tr>
                 </tbody>
               </table>
             </div>
@@ -353,7 +353,7 @@
         <div class="modal-body">
           <div class="detail-item">
             <span class="detail-label">申请人：</span>
-            <span class="detail-value">{{ currentDetail.user_name || '-' }}</span>
+            <span class="detail-value">{{ currentDetail.userName || '-' }}</span>
           </div>
           <div class="detail-item">
             <span class="detail-label">联系电话：</span>
@@ -361,7 +361,7 @@
           </div>
           <div class="detail-item">
             <span class="detail-label">预约时间：</span>
-            <span class="detail-value">{{ currentDetail.book_time || '-' }}</span>
+            <span class="detail-value">{{ currentDetail.bookTime || '-' }}</span>
           </div>
           <div class="detail-item">
             <span class="detail-label">教室：</span>
@@ -377,17 +377,17 @@
           </div>
           <div class="detail-item">
             <span class="detail-label">人数：</span>
-            <span class="detail-value">{{ currentDetail.person_count || '-' }}</span>
+            <span class="detail-value">{{ currentDetail.personCount || '-' }}</span>
           </div>
-          <div class="detail-item" v-if="currentDetail.apply_status === '已通过'">
+          <div class="detail-item" v-if="currentDetail.applyStatus === '已通过'">
             <span class="detail-label">审核时间：</span>
             <span class="detail-value">{{ currentDetail.approve_time || '-' }}</span>
           </div>
-          <div class="detail-item" v-if="currentDetail.apply_status === '已驳回'">
+          <div class="detail-item" v-if="currentDetail.applyStatus === '已驳回'">
             <span class="detail-label">驳回时间：</span>
             <span class="detail-value">{{ currentDetail.reject_time || '-' }}</span>
           </div>
-          <div class="detail-item" v-if="currentDetail.apply_status === '已驳回' && currentDetail.reject_reason">
+          <div class="detail-item" v-if="currentDetail.applyStatus === '已驳回' && currentDetail.reject_reason">
             <span class="detail-label">驳回原因：</span>
             <span class="detail-value">{{ currentDetail.reject_reason }}</span>
           </div>
@@ -587,31 +587,18 @@ const fetchBuildings = async () => {
 const fetchLogs = async () => {
   loading.value = true;
   try {
-    // 构建请求参数
-    const params = {
-      ...filter.value,
-      page: filter.value.page,
-      size: filter.value.size
-    };
-    
+    const params = { ...filter.value, page: filter.value.page, size: filter.value.size };
     const response = await axios.get('/sec/listLogs', { params });
     
-    if (response.data && response.data.data) {
-      const data = response.data.data;
-      logsData.value = data.list || [];
-      pagination.value.total = data.total || 0;
-      pagination.value.page = data.page || 1;
-      pagination.value.size = data.size || 10;
-      
-      // 更新统计数据
-      todayPending.value = data.today_pending || 0;
-      weekApproved.value = data.week_approved || 0;
-      weekRejected.value = data.week_rejected || 0;
-      
-      // 更新趋势数据
-      todayPendingChange.value = data.today_pending_change || 0;
-      weekApprovedChange.value = data.week_approved_change || 0;
-      weekRejectedChange.value = data.week_rejected_change || 0;
+    if (response.code === 200) {  // 直接判断 response 的 code（因 axios 拦截器可能已处理 response.data）
+      // 后端 data 直接是列表数组，无需再取 data.list
+      logsData.value = response.data || [];  // 修正：直接使用 response.data 作为列表数据
+      // 总条数可直接用数组长度（若后端有分页，需确认是否返回 total 字段）
+      pagination.value.total = response.data.length || 0;  
+    } else {
+      ElMessage.error(response.msg || '获取数据失败');
+      logsData.value = [];
+      pagination.value.total = 0;
     }
   } catch (error) {
     console.error('获取审核列表失败:', error);
@@ -622,6 +609,7 @@ const fetchLogs = async () => {
     loading.value = false;
   }
 };
+
 
 // 查看详情
 const viewDetails = async (applyId) => {
@@ -707,9 +695,9 @@ const confirmReject = async () => {
 // 重置筛选条件
 const resetFilter = () => {
   filter.value = {
-    apply_status: '',
+    applyStatus: '',
     buildingId: '',
-    user_name: '',
+    userName: '',
     date_start: '',
     date_end: '',
     page: 1,
