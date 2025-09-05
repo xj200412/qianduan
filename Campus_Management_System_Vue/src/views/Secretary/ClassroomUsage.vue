@@ -65,15 +65,10 @@
                   <p class="stat-label">本时段平均使用率</p>
                   <h3 class="stat-value">{{ avgUsageRate || '加载中...' }}</h3>
                   
-                  <!-- <p class="stat-trend" :class="trendClass">
+                  <p class="stat-trend" :class="trendClass">
                     <i class="fa" :class="trendIcon"></i>
                     {{ trendText || '计算中...' }}
-                  </p> -->
-                  <!-- 修改后的趋势显示（仅在有数据时显示） -->
-<p class="stat-trend" :class="trendClass" v-if="trendText">
-  <i class="fa" :class="trendIcon"></i>
-  {{ trendText }}
-</p>
+                  </p>
                 </div>
                 <div class="stat-icon bg-blue-50">
                   <i class="fa fa-percent text-primary text-base"></i>
@@ -88,13 +83,9 @@
                   <p class="stat-label">使用最频繁教室</p>
                   <h3 class="stat-value">{{ mostUsedClassroom || '加载中...' }}</h3>
                   
-                  <!-- <p class="stat-trend text-gray-500">
+                  <p class="stat-trend text-gray-500">
                     使用次数: {{ mostUsedCount || '0' }}次
-                  </p> -->
-                  <!-- 修改后的次数显示（仅在有数据时显示） -->
-<p class="stat-trend text-gray-500" v-if="mostUsedCount !== '-'">
-  使用次数: {{ mostUsedCount }}次
-</p>
+                  </p>
                 </div>
                 <div class="stat-icon bg-green-50">
                   <i class="fa fa-building-o text-success text-base"></i>
@@ -239,14 +230,10 @@
                       </span>
                     </td>
                   </tr>
-                  <!-- 无数据状态（仅查询后显示） -->
-<tr v-if="!loading && usageData.length === 0 && (filter.dateStart || filter.dateEnd)">
-  <td colspan="5" class="text-center py-4">暂无数据</td>
-</tr>
-<!-- 未选择时间提示（初始状态） -->
-<tr v-if="!loading && usageData.length === 0 && !filter.dateStart && !filter.dateEnd">
-  <td colspan="5" class="text-center py-4">请选择时间范围后查询</td>
-</tr>
+                  <!-- 无数据状态 -->
+                  <tr v-if="!loading && usageData.length === 0">
+                    <td colspan="5" class="text-center py-4">暂无数据</td>
+                  </tr>
                 </tbody>
               </table>
             </div>
@@ -321,12 +308,12 @@ export default {
     const isMobile = ref(window.innerWidth < 768);
     const loading = ref(false); // 加载状态
 
-  // 统计数据：初始值设为“请选择时间范围”，而非加载中
-const avgUsageRate = ref('请选择时间范围');
-const mostUsedClassroom = ref('请选择时间范围');
-const mostUsedCount = ref('-'); // 初始隐藏次数显示
-const leastUsedClassroom = ref('请选择时间范围');
-const leastUsedCount = ref('-'); // 初始隐藏次数显示
+    // 统计数据
+    const avgUsageRate = ref('');
+    const mostUsedClassroom = ref('');
+    const mostUsedCount = ref(0);
+    const leastUsedClassroom = ref('');
+    const leastUsedCount = ref(0);
     const trendClass = ref('');
     const trendIcon = ref('');
     const trendText = ref('');
@@ -500,60 +487,69 @@ const leastUsedCount = ref('-'); // 初始隐藏次数显示
     };
 
     // 查询按钮点击事件
-    const handleQuery = () => {
-      if (!filter.value.dateStart || !filter.value.dateEnd) {
-        ElMessage.warning('请选择开始日期和结束日期');
-        return;
-      }
-      // 确保开始日期不晚于结束日期
-      if (new Date(filter.value.dateStart) > new Date(filter.value.dateEnd)) {
-        ElMessage.warning('开始日期不能晚于结束日期');
-        return;
-      }
-      fetchUsageData();
+// 查询按钮点击事件
+const handleQuery = () => {
+  if (!filter.value.dateStart || !filter.value.dateEnd) {
+    ElMessage.warning('请选择开始日期和结束日期');
+    return;
+  }
+  if (new Date(filter.value.dateStart) > new Date(filter.value.dateEnd)) {
+    ElMessage.warning('开始日期不能晚于结束日期');
+    return;
+  }
+  // 先更新表格数据，再更新卡片数据（保证筛选条件一致）
+  fetchUsageData().then(() => {
+    fetchClassroomMetrics();  // 新增：筛选后同步更新卡片数据
+  });
+};
+// 获取统计卡片数据
+// 获取统计卡片数据
+const fetchClassroomMetrics = async () => {
+  try {
+    // const params = {
+    //   buildingId: filter.value.buildingId || undefined,
+    //   roomType: filter.value.roomType || undefined,
+    //   dateStart: filter.value.dateStart || undefined,
+    //   dateEnd: filter.value.dateEnd || undefined
+      
+    // };
+    const params = {
+      building_id: filter.value.buildingId || undefined,  // 原：buildingId → 改为 building_id
+      room_type: filter.value.roomType || undefined,      // 原：roomType → 改为 room_type
+      date_start: filter.value.dateStart || undefined,    // 原：dateStart → 改为 date_start
+      date_end: filter.value.dateEnd || undefined         // 原：dateEnd → 改为 date_end
     };
-// 获取统计卡片数据
-// 获取统计卡片数据
-// const fetchClassroomMetrics = async () => {
-//   try {
-//     const params = {
-//       buildingId: filter.value.buildingId || undefined,
-//       roomType: filter.value.roomType || undefined,
-//       dateStart: filter.value.dateStart || undefined,
-//       dateEnd: filter.value.dateEnd || undefined
-//     };
-    
-//     const response = await axios.get('/sec/calculateClassroomMetrics', { params });
-    
-//     if (response.code === 200 && response.data) {
-//       const metrics = response.data;
-//       // 1. 修正字段名：averageUsageRate（后端）→ 前端直接使用，加“%”显示
-//       avgUsageRate.value = metrics.averageUsageRate ? `${metrics.averageUsageRate}%` : '0%';
-//       // 2. 修正字段名：mostUsedClassroom（后端）→ 前端直接使用
-//       mostUsedClassroom.value = metrics.mostUsedClassroom || '暂无数据';
-//       // 3. 修正字段名：mostUsedCount（后端）→ 转数字后赋值
-//       mostUsedCount.value = metrics.mostUsedCount ? Number(metrics.mostUsedCount) : 0;
-//       // 4. 修正字段名：leastUsedClassroom（后端）→ 前端直接使用
-//       leastUsedClassroom.value = metrics.leastUsedClassroom || '暂无数据';
-//       // 5. 修正字段名：leastUsedCount（后端）→ 转数字后赋值
-//       leastUsedCount.value = metrics.leastUsedCount ? Number(metrics.leastUsedCount) : 0;
-//       // 6. 修正趋势数据字段：用 weeklyComparison（后端）代替 changeRate
-//       calculateTrend(metrics.weeklyComparison);
-//     } else {
-//       // 异常处理（保持不变）
-//       avgUsageRate.value = '0%';
-//       mostUsedClassroom.value = '暂无数据';
-//       mostUsedCount.value = 0;
-//       leastUsedClassroom.value = '暂无数据';
-//       leastUsedCount.value = 0;
-//       trendText.value = '无数据';
-//     }
-//   } catch (error) {
-//     // 错误处理（保持不变）
-//     console.error('获取教室统计数据失败:', error);
-//     ElMessage.error('获取统计数据时发生网络错误');
-//   }
-// };
+    const response = await axios.get('/sec/calculateClassroomMetrics', { params });
+    console.log('【卡片数据接口响应】', response);  // 移到response定义之后
+    if (response.code === 200 && response.data) {
+      const metrics = response.data;
+      // 2. 核心修复：用后端返回的小驼峰字段提取数据      
+avgUsageRate.value = metrics.averageUsageRate ? `${metrics.averageUsageRate}%` : '0%';      
+mostUsedClassroom.value = metrics.mostUsedClassroom || '暂无数据';      
+mostUsedCount.value = metrics.mostUsedCount ? Number(metrics.mostUsedCount) : 0;      
+leastUsedClassroom.value = metrics.leastUsedClassroom || '暂无数据';      
+leastUsedCount.value = metrics.leastUsedCount ? Number(metrics.leastUsedCount) : 0;
+      calculateTrend(metrics.weeklyComparison);  // 修正趋势字段
+    } else {
+      // 异常处理
+      avgUsageRate.value = '0%';
+      mostUsedClassroom.value = '暂无数据';
+      mostUsedCount.value = 0;
+      leastUsedClassroom.value = '暂无数据';
+      leastUsedCount.value = 0;
+      trendText.value = '无数据';
+    }
+  } catch (error) {
+   // 修复：移除对response的引用，从error对象获取错误信息
+   console.error('获取教室统计数据失败:', error);
+    // 如需打印错误响应，应从error对象中获取
+    if (error.response) {
+      console.error('错误响应状态:', error.response.status);
+      console.error('错误响应内容:', error.response.data);
+    }
+    ElMessage.error('获取统计数据时发生网络错误');
+  }
+};
     // 获取使用率数据
     const fetchUsageData = async () => {
       loading.value = true;
@@ -700,52 +696,56 @@ const leastUsedCount = ref('-'); // 初始隐藏次数显示
     };
 
     // 重置筛选条件
-    const resetFilter = () => {
-      filter.value = {
-        buildingId: '',
-        roomType: '',
-        dateStart: null,
-        dateEnd: null,
-        page: 1,
-        size: 10
-      };
-      pagination.value = { page: 1, size: 10, total: 0 };
-  // 重置卡片为初始提示
-  avgUsageRate.value = '请选择时间范围';
-  mostUsedClassroom.value = '请选择时间范围';
-  mostUsedCount.value = '-';
-  leastUsedClassroom.value = '请选择时间范围';
-  leastUsedCount.value = '-';
+// 重置筛选条件
+const resetFilter = () => {
+  filter.value = {
+    buildingId: '',
+    roomType: '',
+    dateStart: null,
+    dateEnd: null,
+    page: 1,
+    size: 10
+  };
+  pagination.value.page = 1;
+  // 重置表格数据
+  fetchUsageData();
+  // 重置卡片数据为初始状态
+  avgUsageRate.value = '';
+  mostUsedClassroom.value = '';
+  mostUsedCount.value = 0;
+  leastUsedClassroom.value = '';
+  leastUsedCount.value = 0;
   trendText.value = '';
-  usageData.value = [];      
-    };
+};
 
     // 生命周期
     onMounted(() => {
-  // 获取用户信息
-  const user = localStorage.getItem('currentUser');
-  if (user) {
-    const userData = JSON.parse(user);
-    userName.value = userData.name || '教秘用户';
-  }
-  
-  // 只加载楼栋和教室类型，不调用已删除的函数
-  Promise.all([fetchBuildings(), fetchRoomTypes()]);
-  
-  // 监听滚动事件
-  const handleScroll = () => {
-    isScrolled.value = window.scrollY > 10;
-  };
-  window.addEventListener('scroll', handleScroll);
-  
-  // 监听窗口大小变化
-  const handleResize = () => {
-    isMobile.value = window.innerWidth < 768;
-    sidebarOpen.value = !isMobile.value; // 移动端默认收起侧边栏
-  };
-  window.addEventListener('resize', handleResize);
-  handleResize(); // 初始化
-});
+      // 获取用户信息
+      const user = localStorage.getItem('currentUser');
+      if (user) {
+        const userData = JSON.parse(user);
+        userName.value = userData.name || '教秘用户';
+      }
+      
+      Promise.all([fetchBuildings(), fetchRoomTypes()]).then(() => {
+    // 加载统计卡片数据
+    fetchClassroomMetrics();
+  });
+      
+      // 监听滚动事件
+      const handleScroll = () => {
+        isScrolled.value = window.scrollY > 10;
+      };
+      window.addEventListener('scroll', handleScroll);
+      
+      // 监听窗口大小变化
+      const handleResize = () => {
+        isMobile.value = window.innerWidth < 768;
+        sidebarOpen.value = !isMobile.value; // 移动端默认收起侧边栏
+      };
+      window.addEventListener('resize', handleResize);
+      handleResize(); // 初始化
+    });
 
     // 清理事件监听
     onUnmounted(() => {
