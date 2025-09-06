@@ -64,7 +64,7 @@
                   <p class="stat-label">今日待审核</p>
                   <h3 class="stat-value">{{ todayPending || '0' }}</h3>
                   
-                  <p class="stat-trend">
+                  <!-- <p class="stat-trend">
                       <i class="fa" :class="[
                         todayPendingTrendIcon,
                         {
@@ -74,7 +74,7 @@
                         }
                       ]"></i>
                     {{ todayPendingTrendText || '无数据' }}
-                  </p>
+                  </p> -->
                 </div>
                 <div class="stat-icon bg-yellow-50">
                   <i class="fa fa-clock-o text-yellow-500 text-base"></i>
@@ -408,14 +408,18 @@
             <span class="detail-value">{{ currentDetail.purpose || '-' }}</span>
           </div>
           <!-- 处理时间展示 -->      
-          <div class="detail-item" v-if="currentDetail.applyStatus === '已通过'">        
+          <!-- <div class="detail-item" v-if="currentDetail.applyStatus === '已通过'">        
             <span class="detail-label">通过时间：</span>        
-            <span class="detail-value">{{ formatDateTime(currentDetail.processing_time) || '-' }}</span>      
+            <span class="detail-value">{{ formatDateTime(currentDetail.processingTime) || '-' }}</span>      
           </div>            
           <div class="detail-item" v-if="currentDetail.applyStatus === '已驳回'">        
             <span class="detail-label">驳回时间：</span>        
-            <span class="detail-value">{{ formatDateTime(currentDetail.processing_time) || '-' }}</span>      
-          </div>
+            <span class="detail-value">{{ formatDateTime(currentDetail.processingTime) || '-' }}</span>      
+          </div> -->
+          <div class="detail-item" v-if="currentDetail.applyStatus !== '待审核'">        
+  <span class="detail-label">处理时间：</span>        
+  <span class="detail-value">{{ formatDateTime(currentDetail.processingTime) || '-' }}</span>      
+</div>
           <div class="detail-item" v-if="currentDetail.applyStatus === '已驳回' && currentDetail.rejectReason">
             <span class="detail-label">驳回原因：</span>
             <span class="detail-value">{{ currentDetail.rejectReason }}</span>
@@ -609,13 +613,14 @@ const fetchStats = async () => {
       
       // 处理字段名映射（下划线转驼峰）
       const formattedStats = {
-        todayPending: stats.today_pending || 0,
-        thisWeekApproved: stats.this_week_approved || 0,
-        thisWeekRejected: stats.this_week_rejected || 0,
-        approvedVsYesterday: stats.approved_vs_yesterday || '无数据',
-        rejectedVsLastWeek: stats.rejected_vs_last_week || '无数据',
-        pendingVsLastWeek: stats.pending_vs_last_week || '无数据'
+        todayPending: stats.todayPending || 0,
+        thisWeekApproved: stats.thisWeekApproved || 0,
+        thisWeekRejected: stats.thisWeekRejected || 0,
+        approvedVsYesterday: stats.approvedVsYesterday || '无数据',
+        rejectedVsLastWeek: stats.rejectedVsLastWeek || '无数据',
+        pendingVsLastWeek: stats.pendingVsLastWeek || '无数据'
       };
+        
       
       // 更新统计数值
       todayPending.value = formattedStats.todayPending;
@@ -739,13 +744,19 @@ const fetchLogs = async () => {
       
       logsData.value = responseData.records || [];
       
+      // pagination.value = {
+      //   page: responseData.current || filter.value.page,
+      //   size: responseData.size || filter.value.size,
+      //   total: responseData.total || 0,
+      //   pages: responseData.pages || 0
+      // };
+      // 调整分页数据
       pagination.value = {
-        page: responseData.current || filter.value.page,
-        size: responseData.size || filter.value.size,
-        total: responseData.total || 0,
-        pages: responseData.pages || 0
+        page: filter.value.page,
+        size: filter.value.size,
+        total: logsData.value.length,
+        pages: logsData.value.length > 0 ? 1 : 0
       };
-      
       console.log('数据加载成功，记录数:', logsData.value.length, 
                  '总记录数:', pagination.value.total,
                  '当前页:', pagination.value.page,
